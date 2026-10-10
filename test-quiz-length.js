@@ -73,10 +73,19 @@ const D = vm.runInContext('D', context);
 const randomizeTopicQuestions = vm.runInContext('randomizeTopicQuestions', context);
 const randomizeSubjectQuestions = vm.runInContext('randomizeSubjectQuestions', context);
 
-const topicQuiz = randomizeTopicQuestions(D.math.topics[0]);
-if (topicQuiz.length !== 10) {
-  console.error('FAIL: topic quiz length is', topicQuiz.length, 'expected 10');
-  process.exit(1);
+for (const subject of Object.values(D)) {
+  for (const topic of subject.topics) {
+    const topicQuiz = randomizeTopicQuestions(topic, 10);
+    const texts = topicQuiz.map(q => q[0]);
+    if (topicQuiz.length !== 10) {
+      console.error('FAIL: topic quiz length is', topicQuiz.length, 'expected 10 for', topic.n);
+      process.exit(1);
+    }
+    if (new Set(texts).size !== texts.length) {
+      console.error('FAIL: duplicate question in topic quiz', topic.n);
+      process.exit(1);
+    }
+  }
 }
 
 const subjectQuiz = randomizeSubjectQuestions('math', 10);
@@ -84,5 +93,9 @@ if (subjectQuiz.length !== 10) {
   console.error('FAIL: subject quiz length is', subjectQuiz.length, 'expected 10');
   process.exit(1);
 }
+if (new Set(subjectQuiz.map(q => q[0])).size !== subjectQuiz.length) {
+  console.error('FAIL: duplicate question in subject quiz');
+  process.exit(1);
+}
 
-console.log('PASS: all quizzes are 10 questions long');
+console.log('PASS: all quizzes are 10 unique questions long');

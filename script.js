@@ -20,33 +20,25 @@ function withCategory(question, category) {
 
 function randomizeTopicQuestions(topic, limit = 10) {
   const pool = topic.q.map(question => withCategory(question, topic.n));
-  if (pool.length >= limit) return shuffle(pool).slice(0, limit);
-
-  const expanded = [];
-  const source = shuffle(pool.slice());
-  while (expanded.length < limit) {
-    for (const item of source) {
-      if (expanded.length >= limit) break;
-      expanded.push(item);
-    }
-  }
-
-  return shuffle(expanded);
+  const uniquePool = shuffle(pool);
+  return uniquePool.slice(0, Math.min(limit, uniquePool.length));
 }
 
 function randomizeSubjectQuestions(subjectKey, limit = 10) {
   const subject = D[subjectKey];
-  const pools = subject.topics.map(topic => randomizeTopicQuestions(topic, limit));
-  const countByTopic = Array(subject.topics.length).fill(Math.floor(limit / subject.topics.length));
-  for (let i = 0; i < limit % subject.topics.length; i++) countByTopic[i]++;
-
+  const allQuestions = subject.topics.flatMap(topic => shuffle(topic.q.map(question => withCategory(question, topic.n))));
+  const seen = new Set();
   const selected = [];
-  pools.forEach((pool, index) => {
-    const take = Math.min(countByTopic[index], pool.length);
-    selected.push(...pool.slice(0, take));
-  });
 
-  return shuffle(selected);
+  for (const item of shuffle(allQuestions)) {
+    const key = String(item[0]);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    selected.push(item);
+    if (selected.length >= limit) break;
+  }
+
+  return selected;
 }
 
 function start(){

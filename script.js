@@ -1,5 +1,5 @@
 const SHEET_URL = "";
-const API_BASE = "";
+const API_BASE = (typeof window !== "undefined" && window.location && window.location.origin) ? window.location.origin : "";
 
 const $ = id => document.getElementById(id);
 const store = {
@@ -147,12 +147,17 @@ async function finish(){
   $("status").textContent = "جارٍ حفظ النتيجة...";
 
   try {
-    if (API_BASE) {
-      await fetch(`${API_BASE}/api/save-attempt`, {
+    const saveUrl = API_BASE ? `${API_BASE}/api/save-attempt` : "/api/save-attempt";
+    if (API_BASE || !SHEET_URL) {
+      const response = await fetch(saveUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
       });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "save request failed");
+      }
       $("status").textContent = "تم حفظ نتيجتك ✓";
       return;
     }

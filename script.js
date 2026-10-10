@@ -43,14 +43,14 @@ function randomizeSubjectQuestions(subjectKey, limit = 10) {
 
 function start(){
   student = store.get();
-  if (student && student.name && student.section) { $("hi").textContent = "أهلاً " + student.name + " — الفرقة " + student.section + " 👋"; show("home"); }
+  if (student && student.name && student.section) { $("hi").textContent = "أهلاً " + student.name + "  الصف " + student.section + " 👋"; show("home"); }
   else show("reg");
 }
 $("save").onclick = () => {
   const name = $("name").value.trim();
   if (name.length < 3) { $("name").focus(); $("name").placeholder = "اكتبي اسمك أولاً"; return; }
   const section = $("sec").value.trim();
-  if (!section) { $("sec").focus(); $("sec").placeholder = "اكتبي الفرقة أولاً"; return; }
+  if (!section) { $("sec").focus(); $("sec").placeholder = "اكتبي الصف أولاً"; return; }
   store.set({ name, section }); start();
 };
 $("logout").onclick = () => { store.del(); $("name").value = ""; $("sec").value = ""; start(); };

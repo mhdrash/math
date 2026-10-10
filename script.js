@@ -18,13 +18,25 @@ function withCategory(question, category) {
   return item;
 }
 
-function randomizeTopicQuestions(topic) {
-  return shuffle(topic.q.map(question => withCategory(question, topic.n)));
+function randomizeTopicQuestions(topic, limit = 10) {
+  const pool = topic.q.map(question => withCategory(question, topic.n));
+  if (pool.length >= limit) return shuffle(pool).slice(0, limit);
+
+  const expanded = [];
+  const source = shuffle(pool.slice());
+  while (expanded.length < limit) {
+    for (const item of source) {
+      if (expanded.length >= limit) break;
+      expanded.push(item);
+    }
+  }
+
+  return shuffle(expanded);
 }
 
 function randomizeSubjectQuestions(subjectKey, limit = 10) {
   const subject = D[subjectKey];
-  const pools = subject.topics.map(topic => randomizeTopicQuestions(topic));
+  const pools = subject.topics.map(topic => randomizeTopicQuestions(topic, limit));
   const countByTopic = Array(subject.topics.length).fill(Math.floor(limit / subject.topics.length));
   for (let i = 0; i < limit % subject.topics.length; i++) countByTopic[i]++;
 
@@ -57,7 +69,7 @@ function openMenu(s){
   subj = s; const d = D[s]; $("mtitle").textContent = d.name; $("tiles").innerHTML = "";
   d.topics.forEach((t) => {
     const b = document.createElement("button"); b.className = "tile"; b.style.setProperty("--c", t.c);
-    b.innerHTML = "<span>" + t.i + "</span>" + t.n; b.onclick = () => begin(t.n, randomizeTopicQuestions(t)); $("tiles").append(b);
+    b.innerHTML = "<span>" + t.i + "</span>" + t.n; b.onclick = () => begin(t.n, randomizeTopicQuestions(t, 10)); $("tiles").append(b);
   });
   const b = document.createElement("button"); b.className = "tile wide"; b.style.setProperty("--c", "#f5b942");
   b.innerHTML = "<span>🏆</span>" + d.test;
@@ -67,7 +79,7 @@ function openMenu(s){
 $("toMenu").onclick = $("backMenu").onclick = () => openMenu(subj);
 $("again").onclick = () => { 
   if (topicName === D[subj].test) begin(D[subj].test, randomizeSubjectQuestions(subj, 10));
-  else { const topic = D[subj].topics.find(t => t.n === topicName); begin(topicName, topic ? randomizeTopicQuestions(topic) : list); }
+  else { const topic = D[subj].topics.find(t => t.n === topicName); begin(topicName, topic ? randomizeTopicQuestions(topic, 10) : list); }
 };
 
 function begin(name, qs){ topicName = name; list = qs; i = 0; score = 0; show("quiz"); render(); }

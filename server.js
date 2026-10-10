@@ -6,6 +6,7 @@ const { createClient } = require("@supabase/supabase-js");
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_DIR = path.join(__dirname, "data", "students");
+
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
@@ -207,6 +208,26 @@ app.get("/api/students", async (req, res) => {
   return res.json({ source: "local-file", students });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server listening on http://localhost:${PORT}`);
-});
+async function startServer() {
+  if (supabase) {
+    try {
+      const { error } = await supabase.from("attempts").select("*").limit(1);
+      if (error) {
+        console.error("❌ Supabase verification error:", error.message);
+        process.exit(1);
+      }
+      console.log("✅ Supabase connection verified successfully");
+    } catch (err) {
+      console.error("❌ Supabase connection failed:", err.message);
+      process.exit(1);
+    }
+  } else {
+    console.warn("⚠️ Warning: Supabase credentials missing. Running in local-file fallback mode.");
+  }
+
+  app.listen(PORT, () => {
+    console.log(`🚀 Server is live on port ${PORT}`);
+  });
+}
+
+startServer();
